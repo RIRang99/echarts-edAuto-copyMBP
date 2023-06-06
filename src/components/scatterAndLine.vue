@@ -1,5 +1,5 @@
 <script setup>
-    import { ref, reactive,onMounted, watch,watchEffect, computed,onUnmounted,onBeforeUnmount,defineEmits} from 'vue'
+    import { ref, reactive,onMounted, watch,watchEffect, computed,onUnmounted,onBeforeUnmount,defineEmits, nextTick} from 'vue'
     import * as echarts from 'echarts'
 
 
@@ -11,7 +11,6 @@
     })
     defineEmits(['isExpandedChanged'])
     const { isExpanded } = toRefs(props);
-
     let resizeObserver = null;
     const arr = [
     0.000000E00,-1.650580E-10,-1.645240E-08,4.514880E-08,5.947040E-08,6.424200E-08,6.906440E-08,7.407930E-08,
@@ -127,9 +126,12 @@
 1.650000E00,3.843450E-08,1.972500E-05,2.761610E-04,8.350200E-04,1.568680E-03,2.376380E-03,3.200750E-03
     ]
     const chartContainer = ref(null);
+    // 颜色盘
+    const color = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc']
+    // 记录图例的选中状态
+    var selectedLegend = {};
 
     let currentName = ref('')
-
     const option = reactive({
         title: {
             text: '散点图DEMO',
@@ -137,6 +139,7 @@
                 fontSize:14
             }
         },
+        color:color,
         tooltip: {
             trigger: 'item',
             // axisPointer: {
@@ -183,12 +186,13 @@
 
         legend:{
             show:true,
+            selectedMode:'none',
         },
         grid:{
-            // top: '12%',
+            top: '12%',
            left: '10%',
            right: '10%',
-        //    bottom: '25%',
+           bottom: '25%',
       },
         xAxis: {
             type: 'value',
@@ -209,7 +213,31 @@
                 margin:5
             }
         },
-        yAxis: {
+        // graphic:[
+        //     {
+        //         type:'text',
+        //         right:'6%',
+        //         top:'10%',
+        //         style:{
+        //             text:'Vgs',
+        //             textAlign:'center',
+        //             fontSize:9,
+                
+        //         }
+        //     },
+        //     {
+        //         type:'text',
+        //         left:'center',
+        //         top:'center',
+        //         style:{
+        //             text:'1231231',
+        //             textAlign:'center',
+        //             fill:'red',
+        //             fontSize:14,
+        //         }
+        //     }
+        // ],
+        yAxis: [{
             type: 'value',
             name:'Ids/(A)',
             nameGap: 10,
@@ -223,7 +251,28 @@
                     return value.toExponential(4).replace(/(\.[0-9]*[1-9])0+e/, '$1e')
                 },
             }
-        },
+        },{
+            type:'category',
+            name:'Vgs',
+            nameGap: 0,
+            nameLocation:'end',
+            data:[
+                '序列1','序列2','序列3','序列4','序列5','序列6','序列7','序列8'
+            ],
+            nameTextStyle:{
+                fontSize:14,
+            },
+            axisLabel:{
+               formatter:function(value){
+                
+
+               },
+        rich: {
+
+
+        }
+            }
+        }],
         // 缩放功能，每个对象可以对应不同类型的缩放模式
         dataZoom:[
             {
@@ -254,10 +303,13 @@
 
            },
            orient: 'vertical',  // 工具箱纵向排列
-           right: 20, // 工具箱距离图表右侧的距离
+           right: 5, // 工具箱距离图表右侧的距离
         },     
      
         series: [
+
+            
+
             {
                 emphasis: {
                 disabled:false
@@ -266,11 +318,11 @@
             type: 'scatter',
             
             symbolSize:3,
-              itemStyle:{
+            //   itemStyle:{
      
-                    color:"blue"
+            //         color:"blue"
 
-            },
+            // },
             data: [
              
             ],
@@ -283,11 +335,11 @@
             name: '序列2',
             type: 'scatter',
             symbolSize:3,
-            itemStyle: {
+            // itemStyle: {
      
-                    color: "green"
+            //         color: "green"
                 
-            },
+            // },
             data: [
              
             ],
@@ -298,11 +350,11 @@
             name: '序列3',
             type: 'scatter',
             symbolSize:3,
-            itemStyle: {
+            // itemStyle: {
      
-                    color: "black"
+            //         color: "black"
                 
-            },
+            // },
             data: [
               
             ],
@@ -315,11 +367,12 @@
             type: 'line',
             symbolSize:0,
      
-            itemStyle: {
+            // itemStyle: {
      
-                    color: "red"
+            //         color: "red"
                 
-            },
+            // },
+            
             data: [
             
             ],
@@ -329,11 +382,11 @@
             name: '序列5',
             type: 'scatter',
             symbolSize:3,
-            itemStyle: {
+            // itemStyle: {
      
-                    color:'red'
+            //         color:'red'
                 
-            },
+            // },
             emphasis: {
                 disabled:false
                  },
@@ -347,11 +400,11 @@
             name: '序列6',
             type: 'scatter',
             symbolSize:3,
-            itemStyle: {
+            // itemStyle: {
      
-                    color:'#da70d6'
+            //         color:'#da70d6'
                 
-            },
+            // },
             data: [
              
             ]
@@ -362,11 +415,11 @@
             name: '序列7',
             type: 'scatter',
             symbolSize:3,
-            itemStyle: {
+            // itemStyle: {
      
-                    color:'#8250df'
+            //         color:'#8250df'
                 
-            },
+            // },
             data: [
            
             ]
@@ -391,11 +444,62 @@
         })
     })
 
+    // 生成color和series的映射表，series的name和color按顺序一一对应
+    let legendColors = {}
+    option.series.forEach((item, index) => {
+        legendColors[item.name] = color[index]
+    })
+    console.log(legendColors);
+
+
     // echarts实例resiez事件
     const resize = () => {
         chartInstance.resize()
     }
+    
+    
+
+
+    // 实现点击图例，对应series的color变为灰色
+    const changeSeriesColor = () => {
+        chartInstance.on('legendselectchanged', function(params) {
+            console.log('图例', params);
+  var selected = params.selected;
+  var series = chartInstance.getOption().series;
+
+  for (var i = 0; i < series.length; i++) {
+    var seriesName = series[i].name;
+   if(!selected[seriesName]){
+    nextTick(()=>{
+    //   为series[i]添加color属性，值为灰色
+    series[i].color = '#ccc'
+    // 为series[i]添加show属性，值为true
+    series[i].show = true
+    chartInstance.setOption({
+        series: series
+    });
+    })
  
+   }else{
+        series[i].color = legendColors[seriesName]
+        series[i].show = true
+  
+
+   }
+ 
+  }
+
+    chartInstance.setOption({
+        series: series
+    });
+});
+
+
+
+
+    }
+
+
 
     // 在vue3中，由于响应式代理的特性，echarts官方文档不建议直接使用ref或者reactive来代理echarts的实例对象，它会造成许多预料之外的错误，如：
     // 1.tooltips无法显示
@@ -461,7 +565,7 @@ console.log('params',params);
     chartInstance  =  echarts.init(chartContainer.value);
       chartInstance.setOption(option)
       debounceChooseSeriseHighLight()
-        
+      changeSeriesColor()
          // 创建 ResizeObserver 实例，监听父容器的大小变化
      resizeObserver = new ResizeObserver(resize);
       resizeObserver.observe(chartContainer.value);
@@ -471,29 +575,50 @@ console.log('params',params);
         // 在 isExpanded 变化时执行的逻辑
         // 如果ieExpanded为false,toolbox不显示,datazoom的slider不显示,lengend不显示,如果ieExpanded为true,toolbox显示,datazoom的slider显示,lengend显示,并且调用resize函数，让echarts实例对象重新渲染
         if (isExpanded.value) {
+    
             option.grid.top = '12%'
             option.grid.bottom = '25%'
-            option.yAxis.nameGap = 80
+            // option.yAxis.nameGap = 80
+            // option.yAxis.forEach(item=>{
+            //     item.nameGap = 80
+            // })
+            option.yAxis[0].nameGap = 80
+
             option.toolbox.show = true
             option.dataZoom[1].show = true
             option.legend.show = true
             option.tooltip.show = true
             option.title.textStyle.fontSize = 11
             option.xAxis.axisLabel.fontSize = 11
-            option.yAxis.axisLabel.fontSize = 11
+            // option.yAxis.axisLabel.fontSize = 11
+            option.yAxis.forEach(item=>{
+                item.axisLabel.fontSize = 11
+            })
             option.xAxis.nameTextStyle.fontSize = 11
-            option.yAxis.nameTextStyle.fontSize = 11
+            // option.yAxis.nameTextStyle.fontSize = 11
+            option.yAxis.forEach(item=>{
+                item.nameTextStyle.fontSize = 11
+            })
             chartInstance.setOption(option)
             resize()
         } else {
-            option.grid.top = 60
-            option.grid.bottom =70
-            option.yAxis.nameGap = 50
+        
+            // option.yAxis.nameGap = 50
+            // option.yAxis.forEach(item=>{
+            //     item.nameGap = 50
+            // })
+            option.yAxis[0].nameGap = 50
             option.title.textStyle.fontSize = 8
             option.xAxis.axisLabel.fontSize = 8
-            option.yAxis.axisLabel.fontSize = 8
+            // option.yAxis.axisLabel.fontSize = 8
+            option.yAxis.forEach(item=>{
+                item.axisLabel.fontSize = 8
+            })
             option.xAxis.nameTextStyle.fontSize = 8
-            option.yAxis.nameTextStyle.fontSize = 8
+            // option.yAxis.nameTextStyle.fontSize = 8
+            option.yAxis.forEach(item=>{
+                item.nameTextStyle.fontSize = 8
+            })
             option.toolbox.show = false
             option.dataZoom[1].show = false
             option.legend.show = false
@@ -522,9 +647,9 @@ console.log('params',params);
 </script>
 
 <template>
-
-    <div ref="chartContainer" style="width:100%;height:200px">
-        
+    
+    <div ref="chartContainer" style="width:100%;height:100%">
+ 
     </div>
 
 </template>
