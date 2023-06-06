@@ -1,3 +1,7 @@
 #app{
     height: 100%;
 }
+
+.arco-trigger-popup{
+    z-index:10000 !important ;
+  }

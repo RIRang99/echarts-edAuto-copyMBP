@@ -3,9 +3,9 @@
 // const store = useCounterStore()
 import { onMounted, ref } from "vue";
 const divData = ref([
-  { id: 1, text: "Box 1", isExpanded: false, isMinimized: false },
-  { id: 2, text: "Box 2", isExpanded: false, isMinimized: false },
-  { id: 3, text: "Box 3", isExpanded: false, isMinimized: false },
+  { id: 1, text: "Box 1", isExpanded: false, isMinimized: false ,xyValue:'Linear/Log',dsValue:'Math Tansform'},
+  { id: 2, text: "Box 2", isExpanded: false, isMinimized: false ,xyValue:'Linear/Log',dsValue:'Math Tansform'},
+  { id: 3, text: "Box 3", isExpanded: false, isMinimized: false ,xyValue:'Linear/Log',dsValue:'Math Tansform'},
 ]);
 const divHeight = ref();
 const toggleMaximize = (id) => {
@@ -25,33 +25,30 @@ const toggleMinimize = () => {
     div.isMinimized = false;
   });
 };
-const handleSelect = (v) => {
+const handleSelect = (v,i) => {
   if(v==='默认值'){
-    xyValue.value = '更换坐标轴格式'
+    divData.value[i].xyValue = 'Linear/Log'
   }else{
-    xyValue.value = v
+    divData.value[i].xyValue = v
   }
 };
-const handleSelectDS = (v) => {
+const handleSelectDS = (v,i) => {
   if(v==='默认值'){
-    dsValue.value = '求导'
+    divData.value[i].dsValue = 'Math Tansform'
   }else{
-     dsValue.value = v
+    divData.value[i].dsValue = v
   }
  
 };
-const dsValue = ref('Linear/Log')
-const xyValue = ref('Math Tansform')
 onMounted(() => {
   const a = Math.round(divData.value.length / 2);
   divHeight.value = 100 / a;
-  // getPages();
 });
 </script>
 <template>
   <div class="chatMain">
     <div
-      v-for="div in divData"
+      v-for="(div,i) in divData"
       :key="div.id"
       :class="[
         'box',
@@ -62,8 +59,8 @@ onMounted(() => {
     >
       <div class="toolBox">
         <div class="toolMenu">
-          <a-dropdown @select="handleSelectDS" :popup-max-height="false" style="height:100%">
-            <a-button>{{ dsValue }} <icon-down /></a-button>
+          <a-dropdown @select="(value)=>handleSelectDS(value,i)" :popup-max-height="false">
+            <a-button>{{ div.dsValue }} </a-button>
             <template #content>
               <a-doption>默认值</a-doption>
               <a-doption>y'</a-doption>
@@ -71,8 +68,8 @@ onMounted(() => {
               <a-doption>y'''</a-doption>
             </template>
           </a-dropdown>
-          <a-dropdown @select="handleSelect" :popup-max-height="false">
-            <a-button>{{xyValue}} <icon-down /></a-button>
+          <a-dropdown @select="(value)=>handleSelect(value,i)" :popup-max-height="false">
+            <a-button>{{div.xyValue}} </a-button>
             <template #content>
               <a-doption>默认值</a-doption>
               <a-doption>x-lin, y-lin</a-doption>
@@ -143,8 +140,8 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   border-bottom:1px solid gray ;
-  z-index:10000 !important ;
 }
+
 .expanded {
   width: 100% !important;
   height: 100% !important;

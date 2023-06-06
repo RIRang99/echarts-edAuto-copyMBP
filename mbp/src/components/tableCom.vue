@@ -6,7 +6,6 @@ const demoData = store.demoData;
 const paramData = demoData.param;
 const n15Data = demoData.subckt.param;
 const n15DataModel = demoData.subckt.model;
-console.log(n15DataModel)
 const odata = ref([]);
 const columns = [
   {
